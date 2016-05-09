@@ -1,0 +1,6 @@
+---
+- name: EasyPage
+  hosts: all
+  roles:
+    - { role: apache, become: yes } 
+    - { role: vhost, become: yes, tags: vhost } 

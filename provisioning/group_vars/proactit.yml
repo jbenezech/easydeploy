@@ -1,0 +1,12 @@
+DBUSER: vagrant
+DBPASSWORD: vagrant
+DBNAME: symfony
+APPCOMMONDIR: /vagrant
+APPWEBROOT: /home/easypage/easypage/web
+APPNAME: easypage
+APPUSER: easypage
+APPGROUP: website
+APPDIR: /home/easypage
+REPO: git@bitbucket.org:jeromek/easypage.git
+REPOVERSION: master
+ADMIN_PASSWORD: admin

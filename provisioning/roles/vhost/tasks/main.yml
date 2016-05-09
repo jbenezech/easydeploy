@@ -1,0 +1,20 @@
+---
+- name: create Apache VirtualHost for app
+  template: src=apache2.vhost.js2 dest=/etc/apache2/sites-available/{{ PAGENAME }}.conf
+  notify:
+    restart Apache
+
+- name: enable Apache VirtualHost for app
+  command: creates=/etc/apache2/sites-enabled/{{ PAGENAME }}.conf
+    a2ensite {{ PAGENAME }}
+  notify:
+    - restart Apache
+
+- name: Copy sql template
+  template: src=add_page.js2 dest=/tmp/{{ PAGENAME }}.sql
+
+- name: Insert new page
+  become: yes
+  become_user: postgres
+  shell: psql {{ DBNAME }} -U postgres < /tmp/{{ PAGENAME }}.sql
+  

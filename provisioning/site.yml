@@ -1,0 +1,14 @@
+---
+- name: EasyPage
+  hosts: all
+  roles:
+    - { role: apache, become: yes }
+    - { role: postgres, become: yes }
+    - { role: user, become: yes }
+    - { role: php, become: yes }
+    - { role: git, become: yes }
+    - { role: symfony, become: yes }
+    - { role: webapp-container, become: yes }
+    - { role: webapp, become: yes, become_user: "{{ APPNAME }}" }
+    - { role: symfony }
+

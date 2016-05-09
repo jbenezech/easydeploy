@@ -1,0 +1,8 @@
+---
+- name: add FastCGI worker pool
+  template: src=php-fpm-pool.conf.js2 dest=/etc/php5/fpm/pool.d/{{ APPNAME }}.conf
+  notify:
+    - restart PHP5-FPM
+  tags:
+    - webapp
+    - install

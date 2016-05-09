@@ -1,0 +1,21 @@
+---
+- name: PostgreSQL server and client
+  apt: name=postgresql,libpq-dev,python-psycopg2
+  tags:
+    - postgres
+    - install
+
+- name: PostgreSQL database user
+  sudo_user: postgres
+  postgresql_user: name={{ DBUSER }} password={{ DBPASSWORD }}
+  tags:
+    - postgres
+    - install
+
+- name: PostgreSQL database init
+  sudo_user: postgres
+  postgresql_db: name={{ DBNAME }} owner={{ DBUSER }}
+  tags:
+    - postgres
+    - install
+  

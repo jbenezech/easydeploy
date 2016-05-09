@@ -1,0 +1,13 @@
+---
+- name: Git install
+  apt: name=git
+  tags:
+    - git
+    - install
+
+- name: Create .ssh directory
+  file: path=/home/{{ APPNAME }}/.ssh state="directory" owner={{ APPNAME }} group=website mode=0700
+  tags:
+    - user
+    - install
+

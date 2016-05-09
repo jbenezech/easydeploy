@@ -1,0 +1,6 @@
+---
+- name: Get Postfix
+  apt: name=postfix
+  tags:
+    - smtp
+    - install

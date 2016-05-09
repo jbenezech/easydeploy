@@ -1,0 +1,1 @@
+INSERT INTO PAGE (id, domain, email) values ({{ PAGE_ID }}, '{{ PAGENAME }}', 'info@{{ PAGENAME }}');

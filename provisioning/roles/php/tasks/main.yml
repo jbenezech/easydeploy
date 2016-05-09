@@ -1,0 +1,38 @@
+- name: PHP 5.x and extensions
+  apt: name={{ item }}
+  with_items:
+    - php5-cli
+    - php5-curl
+    - php5-fpm
+    - php5-pgsql
+    - php5-mysql
+    - php5-xdebug
+    - php5-intl
+    - php5-gd
+  notify:
+    - restart Apache
+  tags:
+    - php
+    - install
+
+- name: copy php.ini customizations
+  copy: src=php-extra.ini dest=/etc/php5/mods-available/extra.ini
+  tags:
+    - php
+    - install
+
+- name: enable php.ini customizations
+  command: creates=/etc/php5/fpm/conf.d/90-extra.ini
+    php5enmod extra
+  tags:
+    - php
+    - install
+
+- name: Disable XDebug
+  command: php5dismod xdebug
+  notify:
+    - restart PHP5-FPM
+  tags:
+      - php
+      - install
+      

@@ -1,0 +1,10 @@
+---
+- name: Host debug
+  debug: var=hostvars[inventory_hostname] 
+  tags:
+    - debug
+
+- name: Dump all vars
+  action: template src=dumpall.j2 dest=/tmp/ansible.all
+  tags:
+    - debug

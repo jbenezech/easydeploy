@@ -1,0 +1,110 @@
+---
+
+- name: Clone git repository
+  git: 
+    accept_hostkey=yes 
+    dest={{ APPDIR }}/{{ APPNAME }} 
+    repo={{ REPO }} 
+    version={{ REPOVERSION }} 
+    key_file=/home/{{ APPUSER }}/.ssh/id_rsa
+    force=yes
+  tags:
+    - webapp
+    - install
+    - update
+
+- name: create parameters.yml based on parameters.yml.dist
+  command: creates={{ APPDIR }}/{{ APPNAME }}/app/config/parameters.yml
+    cp {{ APPDIR }}/{{ APPNAME }}/app/config/parameters.yml.dist {{ APPDIR }}/{{ APPNAME }}/app/config/parameters.yml
+  tags:
+    - webapp
+    - install
+
+- name: update parameters.yml database user
+  replace: > # see https://github.com/ansible/ansible/issues/2769
+    dest={{ APPDIR }}/{{ APPNAME }}/app/config/parameters.yml
+    regexp="{{ item.key }}:.+$"
+    replace='{{ item.key }}: {{ item.value }}'
+  with_items:
+    - {key: database_user, value: "{{ DBUSER }}" }
+    - {key: database_password, value: "{{ DBPASSWORD }}"}
+  tags:
+    - webapp
+    - install
+
+- name: update config.yml with correct DB adapter
+  replace: >
+    dest={{ APPDIR }}/{{ APPNAME }}/app/config/config.yml
+    regexp="(driver:\s+)pdo_.+$"
+    replace='\1pdo_pgsql'
+  tags:
+    - webapp
+    - install
+
+- name: ensure github.com is a known host
+  lineinfile:
+    dest: "{{ APPDIR }}/.ssh/known_hosts"
+    create: yes
+    state: present
+    line: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}"
+    regexp: "^github\\.com"
+  tags:
+    - webapp
+    - install
+
+- name: install app dependencies (composer install)
+  command: chdir={{ APPDIR }}/{{ APPNAME }}  
+    composer install --quiet --no-ansi --no-interaction
+  tags:
+    - webapp
+    - install
+  environment:
+    - COMPOSER_PROCESS_TIMEOUT: 600
+
+- name: allow vagrant host to access dev frontend controller
+  replace: dest={{ APPWEBROOT }}/app_dev.php
+    regexp="array\('127.0.0.1'"
+    replace="array('10.0.2.2', '127.0.0.1'"
+  tags:
+    - webapp
+    - install
+
+- name: Update app dependencies (composer install)
+  command: chdir={{ APPDIR }}/{{ APPNAME }}  
+    composer install --quiet --no-ansi --no-interaction
+  tags:
+    - webapp
+    - update
+
+- name: Apply database migrations
+  command: bin/console doctrine:migrations:migrate --env=prod --allow-no-migration --no-interaction --quiet chdir={{ APPDIR }}/{{ APPNAME }}
+  tags:
+    - webapp
+    - install
+    - update
+
+- name: Install assets
+  command: bin/console assets:install --env=prod chdir={{ APPDIR }}/{{ APPNAME }}
+  tags:
+    - webapp
+    - install
+    - update
+
+- name: Dump assetic
+  command: bin/console assetic:dump --env=prod chdir={{ APPDIR }}/{{ APPNAME }}
+  tags:
+    - webapp
+    - install
+    - update
+
+- name: Create admin user
+  command: chdir={{ APPDIR }}/{{ APPNAME }} bin/console fos:user:create --super-admin -q --no-ansi admin admin@proactit.io {{ ADMIN_PASSWORD }}
+  ignore_errors: yes ##Ignore errors because if the task is re-run, this will fail with duplicate entries
+
+- name: Clear cache
+  command: bin/console cache:clear --env=prod chdir={{ APPDIR }}/{{ APPNAME }}
+  ignore_errors: yes
+  tags:
+    - webapp
+    - install
+    - Update
