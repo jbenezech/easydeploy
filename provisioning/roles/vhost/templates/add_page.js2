@@ -1,1 +1,1 @@
-INSERT INTO PAGE (id, domain, email) values ({{ PAGE_ID }}, '{{ PAGENAME }}', 'info@{{ PAGENAME }}');
+INSERT INTO PAGE (id, domain, email, user_id) values ({{ PAGE_ID }}, '{{ PAGENAME }}', 'info@{{ PAGENAME }}', (SELECT id FROM FOS_USER where username='admin@{{ PAGENAME }}'));

@@ -1,0 +1,55 @@
+---
+- name: "Install dovecot"
+  apt: name="dovecot-core"
+
+- name: "Install dovecot imap"
+  apt: name="dovecot-imapd"
+
+- name: Install dovecot pop3
+  apt: name="dovecot-pop3d"
+
+- name: "Install dovecot pgsql"
+  apt: name="dovecot-pgsql"
+
+- name: Install dovecot lmtp
+  apt: name="dovecot-lmtpd"
+
+- name: "Copy configuration file"
+  copy: src={{ item }} dest=/etc/dovecot/{{ item }}
+  with_items:
+    - dovecot.conf
+    - dovecot-sql.conf
+
+- name: Add dovecot postgres identity
+  blockinfile: 
+    dest: /etc/postgresql/9.4/main/pg_ident.conf
+    block: |
+      mailmap         dovecot                 mailreader
+      mailmap         postfix                 mailreader
+      mailmap         root                    mailreader
+
+- name: Copy mail sql commands
+  copy: src=maildb.sql dest=/tmp/maildb.sql
+
+- name: Create mail database
+  become: yes
+  become_user: postgres
+  shell: psql -U postgres < /tmp/maildb.sql
+
+- name: Add mail database auth
+  blockinfile:
+    dest: /etc/postgresql/9.4/main/pg_hba.conf
+    insertafter: '# Put your actual configuration here'
+    block: |
+      local       mail    all     peer map=mailmap
+  notify:
+    - Restart postgres
+
+- name: Create Dovecot system user
+  command: adduser --system --no-create-home --uid 500 --group --disabled-password --disabled-login --gecos 'dovecot virtual mail user' vmail
+
+- name: Create mailboxes directory
+  file: path="/home/mailboxes" state="directory" owner="vmail" group="vmail" mode=0700
+
+- name: "Restart dovecot"
+  service: name=dovecot state=restarted

@@ -1,0 +1,9 @@
+---
+- name: Apt update
+  apt: update_cache=yes upgrade=dist
+
+- name: Install sudo
+  apt: name=sudo
+
+- name: Install curl
+  apt: name=curl

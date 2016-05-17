@@ -1,0 +1,1 @@
+ansible-playbook -vvv -i hosts updates.yml --extra-vars "PAGENAME=$1 LANG_CODE=$2 LANG_NAME=$3" --tags "lang"

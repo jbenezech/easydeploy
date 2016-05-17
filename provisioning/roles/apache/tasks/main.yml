@@ -17,6 +17,19 @@
     - apache
     - install
 
+- name: Enable ssl
+  apache2_module: name=ssl
+
+- name: Create ssl directory
+  file: path=ssl state=directory
+
+- name: Copy ssl certificate files
+  copy: src={{ item }} dest=/etc/apache2/ssl/{{ item }}
+  with_items:
+    - proactit.key
+    - proactit_io.ca-bundle.crt
+    - proactit_io.crt
+
 - name: Remove default webapp
   command: 
     a2dissite 000-default.conf
@@ -25,3 +38,4 @@
   tags:
     - webapp
     - install
+

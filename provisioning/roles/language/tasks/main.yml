@@ -1,0 +1,14 @@
+---
+- name: Copy sql template
+  template: src=language.js2 dest=/tmp/{{ LANG_CODE }}.sql
+
+- name: Insert Language in db
+  become: yes
+  become_user: postgres
+  shell: psql {{ DBNAME }} -U postgres < /tmp/{{ LANG_CODE }}.sql
+  
+- name: Insert in config file
+  replace: dest={{ APPDIR }}/{{ APPNAME }}/app/config/config.yml regexp="(locales\:\s\[en\-US)" replace="\1, {{ LANG_CODE }}"
+
+- name: Clear cache
+  command: chdir="{{ APPDIR }}/{{ APPNAME }}" bin/console cache:clear --env=prod

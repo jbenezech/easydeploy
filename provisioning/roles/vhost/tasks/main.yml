@@ -10,6 +10,15 @@
   notify:
     - restart Apache
 
+- name: Add admin user
+  become: yes
+  become_user: "{{ APPNAME }}"
+  shell: chdir="{{ APPDIR }}/{{ APPNAME }}" 
+    bin/console fos:user:create -q --no-ansi admin@{{ PAGENAME }} admin@{{ PAGENAME }} admin &&
+    bin/console fos:user:promote admin@{{ PAGENAME }} ROLE_ADMIN &&
+    bin/console fos:user:activate admin@{{ PAGENAME }}   
+  ignore_errors: yes ##Ignore errors because if the task is re-run, this will fail with duplicate entries
+
 - name: Copy sql template
   template: src=add_page.js2 dest=/tmp/{{ PAGENAME }}.sql
 
@@ -17,4 +26,5 @@
   become: yes
   become_user: postgres
   shell: psql {{ DBNAME }} -U postgres < /tmp/{{ PAGENAME }}.sql
+  
   

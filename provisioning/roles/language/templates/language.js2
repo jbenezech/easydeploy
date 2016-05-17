@@ -1,0 +1,1 @@
+INSERT INTO LANGUAGE (id, name) VALUES ('{{ LANG_CODE }}', '{{ LANG_NAME }}');

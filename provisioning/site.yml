@@ -2,6 +2,7 @@
 - name: EasyPage
   hosts: all
   roles:
+    - { role: common, become: yes }
     - { role: apache, become: yes }
     - { role: postgres, become: yes }
     - { role: user, become: yes }
@@ -11,4 +12,5 @@
     - { role: webapp-container, become: yes }
     - { role: webapp, become: yes, become_user: "{{ APPNAME }}" }
     - { role: symfony }
-
+    - { role: smtp, become: yes, tags: mail }
+    - { role: imap, become: yes, tags: mail }

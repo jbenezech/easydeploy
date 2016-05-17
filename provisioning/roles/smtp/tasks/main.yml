@@ -1,0 +1,116 @@
+---
+- name: Install Postfix
+  apt: name="postfix"
+
+- name: Install postfix pgsql
+  apt: name="postfix-pgsql"
+
+- name: Copy configuration files
+  copy: src={{ item }} dest=/etc/postfix/{{ item }}
+  with_items:
+    - main.cf
+    - pgsql-boxes.cf
+    - pgsql-aliases.cf
+    
+- name: Copy certificate
+  copy: src=proactit.pem dest=/etc/ssl/certs/proactit.pem
+
+- name: Copy certificate key
+  copy: src=proactit.key dest=/etc/ssl/private/proactit.key
+
+- name: Add smtpd instance
+  blockinfile: 
+    dest: /etc/postfix/master.cf
+    block: |
+      submission inet n       -       -       -       -       smtpd
+        -o syslog_name=postfix/submission
+        -o smtpd_tls_wrappermode=no
+        -o smtpd_tls_security_level=encrypt
+        -o smtpd_sasl_auth_enable=yes
+        -o smtpd_reject_unlisted_recipient=no
+        -o smtpd_client_restrictions=$mua_client_restrictions
+        -o smtpd_helo_restrictions=$mua_helo_restrictions
+        -o smtpd_sender_restrictions=$mua_sender_restrictions
+        -o smtpd_recipient_restrictions=permit_mynetworks,permit_sasl_authenticated,reject
+        -o smtpd_relay_restrictions=permit_sasl_authenticated,reject
+        -o milter_macro_daemon_name=ORIGINATING
+        -o smtpd_sasl_type=dovecot
+        -o smtpd_sasl_path=private/auth
+
+- name: Install opendkim
+  apt: name="opendkim"
+
+- name: Install opendkim tools
+  apt: name="opendkim-tools"
+
+- name: Configure dkim
+  blockinfile:
+    dest: /etc/opendkim.configuration
+    block: |
+      AutoRestart             Yes
+      AutoRestartRate         10/1h
+      UMask                   002
+      Syslog                  yes
+      SyslogSuccess           Yes
+      LogWhy                  Yes
+
+      Canonicalization        relaxed/simple
+
+      ExternalIgnoreList      refile:/etc/opendkim/TrustedHosts
+      InternalHosts           refile:/etc/opendkim/TrustedHosts
+      KeyTable                refile:/etc/opendkim/KeyTable
+      SigningTable            refile:/etc/opendkim/SigningTable
+
+      Mode                    sv
+      PidFile                 /var/run/opendkim/opendkim.pid
+      SignatureAlgorithm      rsa-sha256
+
+      UserID                  opendkim:opendkim
+
+      Socket                  inet:12301@localhost
+
+- name: Connect milter
+  lineinfile:
+    dest: /etc/default/opendkim
+    line: 'SOCKET="inet:12301@localhost"'
+
+- name: Create opendkim directory
+  file: path=/etc/opendkim/keys state=directory
+
+- name: Add trusted TrustedHosts
+  copy: src=TrustedHosts dest=/etc/opendkim/TrustedHosts
+
+- name: Add Key KeyTable
+  copy: src=KeyTable dest=/etc/opendkim/KeyTable
+
+- name: Add Signing Table
+  copy: src=SigningTable dest=/etc/opendkim/SigningTable
+
+- name: Create keys folder
+  file: path=/etc/opendkim/keys/proactit.io state=directory
+
+- name: Generate keys
+  command: chdir=/etc/opendkim/keys/proactit.io opendkim-genkey -s mail -d proactit.io
+
+- name: Change mail.private ownership
+  file: path=/etc/opendkim/keys/mail.private state=touch owner=opendkim group=opendkim
+
+- name: Add postfix to opendkim group
+  user: name=postfix groups=opendkim append=yes
+
+- name: Install SpamAssassin
+  apt: name=spamassassin
+
+- name: Install SpamC
+  apt: name=spamc
+
+- name: Enable SpamAssassin
+  command: systemctl enable spamassassin.service
+  
+- name: Reload postfix
+  command: postfix reload
+
+- name: Restart opendkim
+  service: name=opendkim state=restarted
+  
+  

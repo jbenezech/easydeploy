@@ -10,3 +10,4 @@ APPDIR: /home/easypage
 REPO: git@bitbucket.org:jeromek/easypage.git
 REPOVERSION: master
 ADMIN_PASSWORD: admin
+HOSTNAME: debian-jessie

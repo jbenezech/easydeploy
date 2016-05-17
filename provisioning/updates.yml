@@ -1,0 +1,7 @@
+---
+- name: EasyPage
+  hosts: all
+  roles:
+    - { role: apache, become: yes } 
+    - { role: vhost, become: yes, tags: vhost }
+    - { role: language, become: yes, become_user: "{{ APPNAME }}", tags: lang} 
