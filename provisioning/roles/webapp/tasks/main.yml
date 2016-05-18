@@ -70,6 +70,13 @@
     - webapp
     - deploy
 
+- name: Clear cache
+  command: bin/console cache:clear --env=prod chdir={{ APPDIR }}/{{ APPNAME }}
+  ignore_errors: yes
+  tags:
+    - webapp
+    - deploy
+
 - name: Install assets
   command: bin/console assets:install --env=prod chdir={{ APPDIR }}/{{ APPNAME }}
   tags:
@@ -86,9 +93,11 @@
   command: chdir={{ APPDIR }}/{{ APPNAME }} bin/console fos:user:create --super-admin -q --no-ansi admin admin@proactit.io {{ ADMIN_PASSWORD }}
   ignore_errors: yes ##Ignore errors because if the task is re-run, this will fail with duplicate entries
 
-- name: Clear cache
-  command: bin/console cache:clear --env=prod chdir={{ APPDIR }}/{{ APPNAME }}
-  ignore_errors: yes
-  tags:
-    - webapp
-    - deploy
+- name: Create Tech admin user
+  command: chdir={{ APPDIR }}/{{ APPNAME }} bin/console fos:user:create --super-admin -q --no-ansi techadmin tech@proactit.io {{ ADMIN_PASSWORD }}
+  ignore_errors: yes ##Ignore errors because if the task is re-run, this will fail with duplicate entries
+
+- name: Promote Tech admin user
+  command: chdir={{ APPDIR }}/{{ APPNAME }} bin/console fos:user:promote techadmin ROLE_SUPER_TECH_ADMIN
+  ignore_errors: yes ##Ignore errors because if the task is re-run, this will fail with duplicate entries
+
