@@ -46,8 +46,8 @@
 </VirtualHost>
 
 <VirtualHost *:443>
-    ServerName Symfony
-    ServerAlias Symfony
+    ServerName {{ PAGENAME }}
+    ServerAlias www.{{ PAGENAME }}
 
     ErrorLog /var/log/apache2/{{ APPNAME }}_error.log
     CustomLog /var/log/apache2/{{ APPNAME }}_access.log combined
