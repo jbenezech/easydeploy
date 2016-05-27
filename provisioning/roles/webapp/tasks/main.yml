@@ -77,6 +77,12 @@
     - webapp
     - deploy
 
+- name: Clear Image cache
+  file: path={{ APPDIR }}/{{ APPNAME }}/web/media/cache state=absent
+  tags:
+    - webapp
+    - clearimg
+
 - name: Install assets
   command: bin/console assets:install --env=prod chdir={{ APPDIR }}/{{ APPNAME }}
   tags:
