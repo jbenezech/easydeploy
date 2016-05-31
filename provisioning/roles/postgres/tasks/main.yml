@@ -6,14 +6,16 @@
     - install
 
 - name: PostgreSQL database user
-  sudo_user: postgres
+  become: yes
+  become_user: postgres
   postgresql_user: name={{ DBUSER }} password={{ DBPASSWORD }}
   tags:
     - postgres
     - install
 
 - name: PostgreSQL database init
-  sudo_user: postgres
+  become: yes
+  become_user: postgres
   postgresql_db: name={{ DBNAME }} owner={{ DBUSER }}
   tags:
     - postgres

@@ -1,4 +1,14 @@
 ---
+- name: Get next page id from the database
+  shell: psql -lqt {{ DBNAME }} -U postgres -c "select max(id)+1 from page;" | tr -d '\040\011\012\015'
+  become: yes
+  become_user: postgres
+  register: PAGE_SQL
+
+- set_fact: PAGE_ID={{ PAGE_SQL.stdout }}
+
+- debug: var=PAGE_ID
+
 - name: create Apache VirtualHost for app
   template: src=apache2.vhost.js2 dest=/etc/apache2/sites-available/{{ PAGENAME }}.conf
   notify:
