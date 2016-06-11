@@ -18,6 +18,16 @@
   tags:
     - webapp
 
+- name: generate JWT keys
+  command: creates={{ APPDIR }}/{{ APPNAME }}/app/var/jwt/public.pem {{ item }}
+  with_items:
+    - mkdir -p {{ APPDIR }}/{{ APPNAME }}/app/var/jwt
+    - openssl genrsa -out {{ APPDIR }}/{{ APPNAME }}/app/var/jwt/private.pem -aes256 -passout pass:{{ ADMIN_PASSWORD }} 4096
+    - openssl rsa -pubout -in {{ APPDIR }}/{{ APPNAME }}/app/var/jwt/private.pem -out {{ APPDIR }}/{{ APPNAME }}/app/var/jwt/public.pem -passin pass:{{ ADMIN_PASSWORD }}
+  tags:
+    - webapp
+    - jwt
+
 - name: update parameters.yml database user
   replace: > # see https://github.com/ansible/ansible/issues/2769
     dest={{ APPDIR }}/{{ APPNAME }}/app/config/parameters.yml
@@ -27,8 +37,13 @@
     - {key: database_name, value: "{{ DBNAME }}" }
     - {key: database_user, value: "{{ DBUSER }}" }
     - {key: database_password, value: "{{ DBPASSWORD }}"}
+    - {key: jwt_private_key_path, value: "%kernel.root_dir%/var/jwt/private.pem"}
+    - {key: jwt_public_key_path, value: "%kernel.root_dir%/var/jwt/public.pem"}
+    - {key: jwt_key_pass_phrase, value: "{{ ADMIN_PASSWORD }}"}
+    - {key: jwt_token_ttl, value: 86400}  
   tags:
     - webapp
+    - jwt
 
 - name: update config.yml with correct DB adapter
   replace: >
